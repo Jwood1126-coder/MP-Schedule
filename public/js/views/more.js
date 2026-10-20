@@ -1,5 +1,5 @@
 // More: settings, history with undo, backup and restore.
-import { h, choose, toast, dateTimeOf, personName } from '../ui.js';
+import { h, fill, choose, toast, dateTimeOf, personName } from '../ui.js';
 import { mutate, get } from '../api.js';
 import { store, recipesById } from '../store.js';
 import { prettyDate, weekStart } from '../core/dates.js';
@@ -56,12 +56,17 @@ const paste = { text: '', preview: null };
 
 function alfredSection(ctx) {
   const status = h('p', { class: 'muted small', 'data-testid': 'inbox-status' }, 'Alfred inbox: checking…');
+  const recent = h('ul', { class: 'muted small decisions', 'data-testid': 'recent-decisions' });
   loadInbox().then((d) => {
     const n = d?.proposals?.length || 0;
     status.textContent = !d ? 'Alfred inbox: couldn’t check right now.'
       : !d.configured ? 'Alfred inbox: not connected (add the NOTION_TOKEN secret; see the README). Pasting a plan below still works.'
         : d.error ? `Alfred inbox: connected, but Notion had a problem: ${d.error}`
           : `Alfred inbox: connected · ${n} plan${n === 1 ? '' : 's'} waiting${n ? ' on the Plan tab' : ''}.`;
+    const word = { accept: 'Accepted', partial: 'Partly accepted', decline: 'Declined', send_back: 'Sent back' };
+    const sync = { done: 'Notion updated', pending: 'updating Notion…', failed: 'Notion not updated yet, will retry', 'n/a': 'pasted plan' };
+    fill(recent, (d?.recent_decisions || []).map((r) => h('li', {},
+      `${word[r.outcome] || r.outcome}${r.week_of ? ` · week of ${prettyDate(r.week_of)}` : ''}${r.title ? ` · ${r.title}` : ''} — ${sync[r.writeback_status] || 'status unknown'}`)));
   });
   const ta = h('textarea', { rows: '6', placeholder: 'Paste the plan Alfred wrote (the JSON block)…', 'aria-label': 'Plan from Alfred', oninput: (e) => { paste.text = e.target.value; } }, paste.text);
   const preview = async () => {
@@ -85,7 +90,7 @@ function alfredSection(ctx) {
       else ctx.rerender();
     },
   }) : null;
-  return h('div', { class: 'card' }, status,
+  return h('div', { class: 'card' }, status, recent,
     h('label', {}, 'Paste a plan from Alfred'), ta,
     h('div', { class: 'actions' }, h('button', { class: 'small-btn', onclick: preview }, 'Preview')),
     card);

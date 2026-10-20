@@ -5,7 +5,10 @@
 //
 // Rules for adding a migration: append to MIGRATIONS with a new id, and keep
 // every statement idempotent (IF NOT EXISTS, INSERT OR IGNORE). Two isolates
-// may run the same migration at the same moment on a fresh database.
+// may run the same migration at the same moment on a fresh database. A
+// migration may also have run(db) for steps that need code (it must be
+// idempotent too); it runs before the statements.
+import { DEFAULT_SETTINGS } from '../public/js/core/defaults.js';
 
 export const MIGRATIONS = [
   {
@@ -137,7 +140,55 @@ export const MIGRATIONS = [
       )`,
     ],
   },
+  {
+    // Bind decisions to the reviewed revision and make the Notion write-back
+    // durable (stored payload, retried later). Also narrows the default pantry
+    // staples to olive oil and butter for households still on the old default.
+    id: '0003_decision_receipts',
+    statements: [
+      "UPDATE inbox_decisions SET writeback_status = CASE WHEN source = 'notion' THEN 'done' ELSE 'n/a' END WHERE writeback_status IS NULL",
+    ],
+    run: async (db) => {
+      const cols = [
+        'revision TEXT', 'title TEXT', 'writeback_status TEXT', 'writeback_attempts INTEGER NOT NULL DEFAULT 0',
+        'writeback_error TEXT', 'notion_status TEXT', 'reply TEXT', 'decided_by_text TEXT', 'result TEXT',
+      ];
+      for (const col of cols) {
+        try {
+          await db.prepare(`ALTER TABLE inbox_decisions ADD COLUMN ${col}`).run();
+        } catch (err) {
+          // Re-runs (or two first requests at once) find the column already there.
+          if (!/duplicate column/i.test(String(err && err.message))) throw err;
+        }
+      }
+      const row = await db.prepare("SELECT value FROM settings WHERE key = 'staples'").first();
+      if (row && sameList(row.value, OLD_DEFAULT_STAPLES)) {
+        await db.prepare("UPDATE settings SET value = ?, version = version + 1, updated_at = ?, updated_by = 'system' WHERE key = 'staples' AND value = ?")
+          .bind(JSON.stringify(DEFAULT_SETTINGS.staples), new Date().toISOString(), row.value).run();
+      }
+    },
+  },
 ];
+
+// The staples list shipped before 0003. A stored list equal to it (in any
+// order or case) was never customised, so it moves to the new default.
+export const OLD_DEFAULT_STAPLES = [
+  'salt', 'black pepper', 'pepper', 'olive oil', 'vegetable oil', 'butter', 'flour',
+  'sugar', 'garlic powder', 'onion powder', 'chili powder', 'cumin', 'paprika',
+  'dried oregano', 'soy sauce', 'rice vinegar', 'honey', 'cooking spray',
+];
+
+function sameList(json, list) {
+  let v;
+  try {
+    v = JSON.parse(json);
+  } catch {
+    return false;
+  }
+  if (!Array.isArray(v) || v.length !== list.length) return false;
+  const norm = (a) => a.map((x) => String(x).trim().toLowerCase()).sort().join('\n');
+  return norm(v) === norm(list);
+}
 
 export const MIGRATION_IDS = MIGRATIONS.map((m) => m.id);
 
@@ -156,6 +207,7 @@ export async function migrate(db) {
   const applied = [];
   for (const m of MIGRATIONS) {
     if (done.has(m.id)) continue;
+    if (m.run) await m.run(db); // idempotent steps that can't be plain statements
     const stmts = m.statements.map((sql) => db.prepare(sql));
     stmts.push(db.prepare('INSERT OR IGNORE INTO schema_migrations (id, applied_at) VALUES (?, ?)').bind(m.id, new Date().toISOString()));
     await db.batch(stmts); // one transaction per migration

@@ -103,8 +103,9 @@ test('grocery list merges ingredients; "have" and extras work', async () => {
   await beans.getByRole('button', { name: 'Have it' }).click();
   await page.getByTestId('have-list').getByText('black beans').waitFor();
   assert.equal(await list.locator('.item', { hasText: 'black beans' }).count(), 0);
-  // Staples are in their own group.
-  await page.getByTestId('staples').getByText('chili powder').waitFor();
+  // Only olive oil and butter count as pantry staples; spices go on the list.
+  await list.locator('.item', { hasText: 'chili powder' }).waitFor();
+  assert.equal(await page.getByTestId('staples').getByText('chili powder').count(), 0);
   // Tick one into the cart.
   await turkey.getByRole('checkbox').check();
   await page.getByTestId('cart-progress').getByText(/^1 of/).waitFor();

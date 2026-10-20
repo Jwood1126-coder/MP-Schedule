@@ -80,16 +80,53 @@ function scaledText(ing, factor) {
   return formatBase(c.dim, qty * c.toBase, { metric: c.metric }).text;
 }
 
+// The cook view's scale is a preview, kept across the 30-second refresh (and
+// reloads in this tab) per recipe + dinner. Saving it to the dinner is a
+// separate, explicit action.
+const SCALE_KEY = 'mp.cookScale.v1';
+const cookScale = loadScales();
+
+function loadScales() {
+  try {
+    const raw = sessionStorage.getItem(SCALE_KEY);
+    const obj = raw ? JSON.parse(raw) : {};
+    return new Map(Object.entries(obj && typeof obj === 'object' ? obj : {}));
+  } catch {
+    return new Map();
+  }
+}
+
+function rememberScale(key, n) {
+  cookScale.set(key, n);
+  try {
+    sessionStorage.setItem(SCALE_KEY, JSON.stringify(Object.fromEntries(cookScale)));
+  } catch {
+    /* storage unavailable: the in-memory copy still works */
+  }
+}
+
 function cookView(root, ctx, recipe) {
+  const mealId = ctx.route.query.get('meal');
+  const meal = mealId ? (store.data.meals || []).find((m) => m.id === mealId && m.recipe_id === recipe.id) : null;
   const q = Number(ctx.route.query.get('servings'));
-  let servings = Number.isInteger(q) && q > 0 && q <= 20 ? q : recipe.base_servings;
+  const scaleKey = `${recipe.id}|${meal ? meal.id : ''}`;
+  const remembered = Number(cookScale.get(scaleKey));
+  let servings = Number.isInteger(remembered) && remembered > 0 && remembered <= 20 ? remembered
+    : meal ? meal.servings
+      : Number.isInteger(q) && q > 0 && q <= 20 ? q : recipe.base_servings;
   const body = h('div', {});
   const draw = () => {
     const factor = servings / recipe.base_servings;
+    const scaleLabel = meal ? `Scaled to ${servings} (dinner saved for ${meal.servings})` : `Scaled to ${servings}`;
     body.replaceChildren(
       h('div', { class: 'row spread wrap' },
-        h('span', { class: 'row' }, h('span', { class: 'muted small' }, 'Servings'), stepper(servings, { onChange: (v) => { servings = v; draw(); } })),
-        servings !== recipe.base_servings ? h('span', { class: 'muted small' }, `Recipe makes ${recipe.base_servings}; scaled ×${formatNumber(factor)}`) : null),
+        h('span', { class: 'row' }, h('span', { class: 'muted small' }, 'Servings'), stepper(servings, { onChange: (v) => { servings = v; rememberScale(scaleKey, v); draw(); } })),
+        h('span', { class: 'muted small', 'data-testid': 'cook-scale' }, scaleLabel)),
+      servings !== recipe.base_servings ? h('p', { class: 'muted small' }, `Recipe makes ${recipe.base_servings}; scaled ×${formatNumber(factor)}`) : '',
+      meal && servings !== meal.servings ? h('button', {
+        class: 'small-btn',
+        onclick: () => mutate('PUT', `/api/meals/${meal.id}`, { servings, expected_version: meal.version }, { label: 'servings' }),
+      }, `Save ${servings} servings to this dinner`) : '',
       h('h2', {}, 'Ingredients'),
       h('ul', { class: 'ing-list' }, (recipe.ingredients || []).map((i) => h('li', {},
         h('strong', {}, scaledText(i, factor)), ' ', i.name, i.optional ? h('span', { class: 'muted' }, ' (optional)') : null, i.note ? h('span', { class: 'muted' }, ` · ${i.note}`) : null))),

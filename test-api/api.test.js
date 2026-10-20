@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createLocalServer } from '../scripts/local-server.js';
+import { SCHEMA_VERSION } from '../src/schema.js';
 
 const A = 'person-a@example.com';
 const B = 'person-b@example.com';
@@ -193,7 +194,7 @@ test('lock writes the snapshot once; locking again does not duplicate', async ()
   assert.equal(count, lock.data.items);
   assert.equal(st.status, 'locked');
   assert.ok(!st.snapshot.some((i) => i.item_key === 'ground turkey|mass|'), '"have" items are not in the snapshot');
-  assert.ok(!st.snapshot.some((i) => i.name === 'salt'), 'staples default to have');
+  assert.ok(!st.snapshot.some((i) => i.name === 'olive oil'), 'staples (olive oil, butter) default to have');
   const again = await call('POST', `/api/trips/${trip.id}/lock`, { expected_version: 1 });
   assert.equal(again.status, 200);
   assert.equal(again.data.already_locked, true);
@@ -237,7 +238,7 @@ test('settings validation and versioning', async () => {
 test('export then import round-trips all data', async () => {
   const exp = await call('GET', '/api/export');
   assert.equal(exp.status, 200);
-  assert.equal(exp.data.schema_version, '0002_inbox');
+  assert.equal(exp.data.schema_version, SCHEMA_VERSION);
   const snapshotBefore = await state();
   // Change something, then restore from the export.
   await call('POST', '/api/meals', { date: '2026-10-22', recipe_id: recipes[1].id });

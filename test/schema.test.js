@@ -47,3 +47,32 @@ test('ensureSchema caches success and retries after a failure', async () => {
   await ensureSchema(flaky);
   assert.equal(calls, before, 'second success call is cached');
 });
+
+test('0003 moves an untouched old staples list to olive oil + butter, keeps custom lists, and re-runs safely', async () => {
+  const { OLD_DEFAULT_STAPLES } = await import('../src/schema.js');
+  const staplesOf = async (db) => JSON.parse((await db.prepare("SELECT value FROM settings WHERE key = 'staples'").first()).value);
+  const rerun0003 = async (db) => {
+    await db.prepare("DELETE FROM schema_migrations WHERE id = '0003_decision_receipts'").run();
+    return migrate(db);
+  };
+
+  const old = new LocalD1();
+  await migrate(old);
+  // Stored in a different order and case: still the untouched old default.
+  const shuffled = [...OLD_DEFAULT_STAPLES].reverse().map((s, i) => (i % 2 ? s.toUpperCase() : s));
+  await old.prepare("INSERT INTO settings (key, value) VALUES ('staples', ?)").bind(JSON.stringify(shuffled)).run();
+  assert.deepEqual(await rerun0003(old), ['0003_decision_receipts']);
+  assert.deepEqual(await staplesOf(old), ['olive oil', 'butter']);
+
+  const custom = new LocalD1();
+  await migrate(custom);
+  const mine = ['salt', 'olive oil', 'butter', 'rice'];
+  await custom.prepare("INSERT INTO settings (key, value) VALUES ('staples', ?)").bind(JSON.stringify(mine)).run();
+  await rerun0003(custom);
+  assert.deepEqual(await staplesOf(custom), mine, 'customised list untouched');
+
+  // Columns already exist on a re-run; that must not fail.
+  await rerun0003(custom);
+  const cols = (await custom.prepare('PRAGMA table_info(inbox_decisions)').all()).results.map((c) => c.name);
+  for (const c of ['revision', 'writeback_status', 'writeback_attempts', 'reply', 'decided_by_text', 'result']) assert.ok(cols.includes(c), `has ${c}`);
+});

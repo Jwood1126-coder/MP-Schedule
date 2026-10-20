@@ -6,11 +6,9 @@ export const SECTIONS = [
 
 export const DEFAULT_SETTINGS = {
   sections: SECTIONS,
-  staples: [
-    'salt', 'black pepper', 'pepper', 'olive oil', 'vegetable oil', 'butter', 'flour',
-    'sugar', 'garlic powder', 'onion powder', 'chili powder', 'cumin', 'paprika',
-    'dried oregano', 'soy sauce', 'rice vinegar', 'honey', 'cooking spray',
-  ],
+  // Only these are assumed to be in the pantry; everything else is on the list
+  // until someone marks it "have".
+  staples: ['olive oil', 'butter'],
   default_servings: 2,
   preferred_label: 'Busy day',
   default_store: 'Giant Eagle',

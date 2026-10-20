@@ -88,11 +88,19 @@ export function tripList(trip) {
   return buildList(mealsInTrip(trip), recipesById(), trip.marks || [], store.data.settings);
 }
 
-// The trip to show by default: one covering today, else the next upcoming,
-// else the most recent.
+// The trip to show by default: the one covering the next planned dinner
+// (today or later), else one covering today, else the next upcoming, else
+// the most recent.
 export function defaultTrip() {
   const trips = [...(store.data?.trips || [])].sort((a, b) => a.start_date.localeCompare(b.start_date));
   const today = localToday();
+  const upcoming = (store.data?.meals || [])
+    .filter((m) => m.date >= today && (m.status === 'planned' || m.status === 'tentative'))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  for (const meal of upcoming) {
+    const t = trips.find((x) => x.start_date <= meal.date && meal.date <= x.end_date);
+    if (t) return t;
+  }
   return trips.find((t) => t.start_date <= today && today <= t.end_date)
     || trips.find((t) => t.start_date > today)
     || trips[trips.length - 1]

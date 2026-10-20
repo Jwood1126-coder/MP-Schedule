@@ -4,7 +4,7 @@ import { h, sheet, closeSheet, choose, stepper, toast } from '../ui.js';
 import { mutate } from '../api.js';
 import { store, recipesById, mealsOn, isPreferred, boughtForMeal } from '../store.js';
 import { addDays, weekDates, prettyDate, localToday, weekStart } from '../core/dates.js';
-import { proposalCard, loadInbox, inboxKey } from './proposal-card.js';
+import { proposalCard, loadInbox, inboxKey, syncNote } from './proposal-card.js';
 
 const STATUS_LABEL = { tentative: 'Idea', planned: 'Planned', cooked: 'Cooked', skipped: 'Skipped' };
 
@@ -32,11 +32,24 @@ export function render(root, ctx) {
       h('button', { class: 'primary', onclick: () => suggest(ctx, start) }, 'Suggest dinners')),
   );
 
+  // Just accepted a plan: one tap to its grocery list.
+  const last = store.lastAccepted;
+  if (last && Date.now() - last.at < 30 * 60 * 1000) {
+    root.append(h('div', { class: 'panel info row spread wrap', 'data-testid': 'accepted-notice' },
+      h('span', {}, `Plan accepted${last.week_of ? ` for the week of ${prettyDate(last.week_of)}` : ''}.`),
+      h('span', { class: 'row' },
+        last.trip_id ? h('button', { class: 'primary small-btn', onclick: () => { store.lastAccepted = null; ctx.navigate(`#/groceries?trip=${last.trip_id}`); } }, 'Shop these dinners') : null,
+        h('button', { class: 'link', 'aria-label': 'Dismiss', onclick: () => { store.lastAccepted = null; ctx.rerender(); } }, '✕'))));
+  }
+
   // Alfred's proposals come first: reviewing them is the main job here.
   const inbox = store.inbox?.data;
   const waiting = inbox?.proposals || [];
+  const sync = syncNote(inbox);
+  if (sync) root.append(h('p', { class: 'muted small', 'data-testid': 'inbox-sync' }, sync));
   if (waiting.length) {
     root.append(proposalCard(waiting[0], {
+      onStale: () => ctx.rerender(),
       onDecided: (r) => {
         if (r.week_of && (r.outcome === 'accept' || r.outcome === 'partial')) ctx.navigate(`#/plan?w=${weekStart(r.week_of)}`);
         ctx.reload({ force: true });
@@ -81,7 +94,7 @@ function mealCard(meal, recipe, ctx) {
   const status = meal.status;
   return h('div', { class: `card meal-card ${status}`, 'data-meal': meal.id },
     h('div', { class: 'row spread' },
-      h('button', { class: 'meal-title', onclick: () => ctx.navigate(`#/recipes/${meal.recipe_id}?servings=${meal.servings}`) }, name),
+      h('button', { class: 'meal-title', onclick: () => ctx.navigate(`#/recipes/${meal.recipe_id}?meal=${meal.id}&d=${meal.date}`) }, name),
       h('span', { class: `chip ${status}` }, STATUS_LABEL[status])),
     h('div', { class: 'row wrap spread' },
       h('span', { class: 'row' }, h('span', { class: 'muted small' }, 'Servings'),

@@ -58,7 +58,9 @@ Open the app's `workers.dev` address in Safari, sign in, tap **Share → Add to 
 
 ## Alfred's inbox
 
-Alfred does the planning; the app is where you and Jess review and accept. Alfred posts each week's proposal as a page in the Notion **Meal plan inbox** database (format: [docs/ALFRED_FORMAT.md](docs/ALFRED_FORMAT.md)). It appears at the top of **Plan**: keep (✓), swap to the alternate (↺) or skip (✕) each dinner, add a note, then **Accept plan** or **Send back**. Accepting adds the dinners, any new recipes, the busy days and extra grocery items in one step (and it shows up in History, so it can be undone). The app writes the result back to the Notion page so Alfred sees what you chose.
+Alfred does the planning; the app is where you and Jess review and accept. Alfred posts each week's proposal as a page in the Notion **Meal plan inbox** database (format: [docs/ALFRED_FORMAT.md](docs/ALFRED_FORMAT.md)). It appears at the top of **Plan**: keep (✓), swap to the alternate (↺) or skip (✕) each dinner, add a note, then **Accept plan** or **Send back**. Accepting adds the dinners, any new recipes, the busy days and extra grocery items in one step (and it shows up in History, so it can be undone). It also puts the dinners on a grocery trip even when the plan has no extra items; tap **Shop these dinners** to open that list. The app writes the result back to the Notion page so Alfred sees what you chose; if Notion is unreachable, the app keeps retrying that update and shows it on Plan.
+
+If Alfred edits a plan after you opened it, Accept asks you to review the new version first, so you only ever accept what you saw. Pantry staples default to **olive oil and butter** only; everything else goes on the list until you mark it "have it" (change this under More → Settings).
 
 ### One-time setup
 

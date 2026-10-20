@@ -72,13 +72,26 @@ The same JSON can also be pasted into the app (More → Paste a plan from Alfred
 
 - The app shows the plan on the **Plan** tab. Each dinner can be kept (✓),
   swapped to its alternate (↺) or skipped (✕), and there's an optional note.
-- **Accept** adds the chosen dinners, any needed new recipes, the busy days and
-  the extras (on that week's grocery trip, created if needed). It can't be
-  applied twice.
+- **Accept** adds the chosen dinners, any needed new recipes and the busy days,
+  and puts the dinners on a grocery trip **even when there are no extras**: an
+  open trip overlapping that week, or a new one from the later of the week's
+  Monday and today to that Sunday (pickup date editable in the app). Extras go
+  on that trip. If that week's trip is already shopped, it's left alone and
+  the app says so. A repeat of the same decision (double tap, retry) returns
+  the recorded result instead of adding anything twice.
+- **Accept only what was reviewed:** the app records a revision (a hash of the
+  page's JSON as read). If the page is edited after someone opened it, their
+  Accept is refused with "This plan changed in Notion. Review the new version."
+  and nothing is written; the new version is shown for review instead.
+- **Pantry:** only olive oil and butter are assumed to be on hand. Every other
+  ingredient lands on the buy list until someone marks it "have it".
 - The app then sets the Notion page's **Status** to `Accepted`, `Partly
   accepted`, `Changes requested` (Send back) or `Declined`, and writes a
   **Reply**: what was accepted or skipped, the note, and the current recipe
-  library names, so the next proposal can reuse them.
+  library names, so the next proposal can reuse them. That update is saved
+  with the decision first; if Notion can't be reached, the app keeps retrying
+  the same saved update (shown on Plan and under More → Alfred) rather than
+  asking anyone to accept again.
 - After **Send back**, revise the same page and set Status back to `Proposed`.
 - If something can't be read (bad date, unknown recipe, bad ingredient line),
   the app shows the exact problem and won't accept until it's fixed.

@@ -4,14 +4,17 @@
 import { h, fill, toast } from '../ui.js';
 import { mutate, get } from '../api.js';
 import { store } from '../store.js';
-import { prettyDate, shortDay } from '../core/dates.js';
+import { prettyDate, shortDay, localToday } from '../core/dates.js';
 
-// Choices survive re-renders (the plan refreshes every 30 s).
+// Choices survive re-renders (the plan refreshes every 30 s). They're keyed by
+// revision too, so an edited plan starts fresh instead of reusing old choices.
 const drafts = new Map();
+const draftKey = (p) => `${p.id}|${p.revision || ''}`;
 
 function draftFor(p) {
-  if (!drafts.has(p.id)) drafts.set(p.id, { choices: (p.data?.dinners || []).map(() => 'main'), note: '' });
-  return drafts.get(p.id);
+  const key = draftKey(p);
+  if (!drafts.has(key)) drafts.set(key, { choices: (p.data?.dinners || []).map(() => 'main'), note: '' });
+  return drafts.get(key);
 }
 
 // Fetch the Notion inbox: on first load, when the app comes back to the
@@ -41,10 +44,21 @@ export async function loadInbox({ force = false } = {}) {
 }
 
 export function inboxKey(data) {
-  return (data?.proposals || []).map((p) => p.id).join(',');
+  const props = (data?.proposals || []).map((p) => `${p.id}:${p.revision || ''}`).join(',');
+  const sync = (data?.recent_decisions || []).map((d) => `${d.proposal_id}:${d.writeback_status}`).join(',');
+  return `${props}|${sync}`;
 }
 
-export function proposalCard(p, { text = null, onDecided } = {}) {
+// One line about decisions whose Notion update hasn't landed yet, or null.
+export function syncNote(data) {
+  const open = (data?.recent_decisions || []).filter((d) => d.writeback_status === 'pending' || d.writeback_status === 'failed');
+  if (!open.length) return null;
+  return open.some((d) => d.writeback_status === 'failed')
+    ? 'Couldn’t update Alfred’s Notion row yet — will retry.'
+    : 'Sending your decision to Alfred… (retrying)';
+}
+
+export function proposalCard(p, { text = null, onDecided, onStale } = {}) {
   const draft = draftFor(p);
   const data = p.data;
   const res = p.resolution || { dinners: [] };
@@ -59,6 +73,8 @@ export function proposalCard(p, { text = null, onDecided } = {}) {
     const body = {
       id: p.id,
       source: p.source,
+      revision: p.revision,
+      today: localToday(),
       outcome,
       note: draft.note.trim() || undefined,
       dinners: draft.choices.map((choice, index) => ({ index, choice })),
@@ -67,18 +83,30 @@ export function proposalCard(p, { text = null, onDecided } = {}) {
     let r;
     try {
       r = await mutate('POST', '/api/inbox/decide', body, { label: 'plan decision' });
-    } catch {
+    } catch (err) {
+      // Alfred edited the plan after it was shown: fetch the new version.
+      if (err?.data?.error === 'plan_changed') {
+        drafts.delete(draftKey(p));
+        await loadInbox({ force: true });
+        if (onStale) onStale();
+      }
       return;
     }
     if (!r) return;
-    drafts.delete(p.id);
+    drafts.delete(draftKey(p));
     const shown = (r.warnings || []).filter((w) => w !== 'notion_writeback_failed');
     if (r.outcome === 'accept' || r.outcome === 'partial') {
       const n = r.applied.meals;
-      toast(`Added ${n} dinner${n === 1 ? '' : 's'}${r.applied.extras ? ` and ${r.applied.extras} grocery item${r.applied.extras === 1 ? '' : 's'}` : ''}${shown.length ? `. ${shown[0]}` : ''}`, 5000);
+      const word = r.already ? 'Already accepted' : `Added ${n} dinner${n === 1 ? '' : 's'}`;
+      toast(`${word}${!r.already && r.applied.extras ? ` and ${r.applied.extras} grocery item${r.applied.extras === 1 ? '' : 's'}` : ''}${shown.length ? `. ${shown[0]}` : ''}`, 5000);
+      store.lastAccepted = { trip_id: r.trip_id || null, week_of: r.week_of, meals: n, at: Date.now() };
     } else toast(r.outcome === 'send_back' ? 'Sent back to Alfred' : 'Declined');
-    if ((r.warnings || []).includes('notion_writeback_failed')) toast('Saved, but Notion wasn’t updated. Tell Alfred directly.', 6000);
     if (store.inbox?.data?.proposals) store.inbox.data.proposals = store.inbox.data.proposals.filter((x) => x.id !== p.id);
+    if (r.writeback_status === 'failed' || r.writeback_status === 'pending') {
+      // Show the retry status right away; the server retries on later inbox checks.
+      const rd = store.inbox?.data?.recent_decisions;
+      if (rd) rd.unshift({ proposal_id: p.id, outcome: r.outcome, writeback_status: r.writeback_status, decided_at: new Date().toISOString() });
+    }
     if (onDecided) onDecided(r);
   };
 

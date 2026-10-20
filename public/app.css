@@ -134,13 +134,14 @@ input[type="checkbox"] { width: 24px; height: 24px; min-height: 24px; accent-col
 .progress.done { color: var(--accent); }
 
 /* Month grid */
-.month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+/* minmax(0, 1fr) + min-width: 0 so long dinner names truncate instead of widening a column. */
+.month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .month-grid .dow { text-align: center; font-size: .75rem; color: var(--muted); padding: 4px 0; }
-.mday { min-height: 64px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px; font-size: .75rem; text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.mday { min-width: 0; overflow: hidden; min-height: 64px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px; font-size: .75rem; text-align: left; display: flex; flex-direction: column; gap: 2px; }
 .mday.out { opacity: .45; }
 .mday.pref { background: var(--accent-soft); }
 .mday .num { font-weight: 700; font-size: .8rem; }
-.mday .m { display: block; border-radius: 4px; padding: 1px 3px; background: var(--accent); color: var(--accent-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mday .m { display: block; max-width: 100%; min-width: 0; border-radius: 4px; padding: 1px 3px; background: var(--accent); color: var(--accent-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mday .m.tentative { background: transparent; color: var(--text); border: 1px dashed var(--muted); }
 .mday .m.skipped { background: var(--surface-2); color: var(--muted); text-decoration: line-through; }
 

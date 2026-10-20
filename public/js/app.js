@@ -91,11 +91,14 @@ export async function reload({ force = false } = {}) {
   render();
 }
 
-// ?w=YYYY-MM-DD picks the week, ?m=YYYY-MM the month; anything else is ignored.
+// ?w=YYYY-MM-DD picks the week, ?m=YYYY-MM the month, and a recipe opened
+// from a dinner carries ?d=YYYY-MM-DD so that dinner's week is loaded.
 function applyRouteParams(route) {
   const w = route.query.get('w');
   const m = route.query.get('m');
+  const d = route.query.get('d');
   if (route.name === 'plan' && isDate(w)) store.weekStart = weekStart(w);
+  if (route.name === 'recipes' && isDate(d)) store.weekStart = weekStart(d);
   if (route.name === 'month' && /^\d{4}-(0[1-9]|1[0-2])$/.test(m || '')) store.month = m;
 }
 

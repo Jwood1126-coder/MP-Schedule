@@ -37,7 +37,7 @@ export function render(root, ctx) {
       },
     },
     h('span', { class: 'num' }, String(Number(date.slice(8)))),
-    meals.map((m) => h('span', { class: `m ${m.status}` }, byId[m.recipe_id]?.name || 'Dinner'))));
+    meals.map((m) => h('span', { class: `m ${m.status}`, title: byId[m.recipe_id]?.name || 'Dinner' }, byId[m.recipe_id]?.name || 'Dinner'))));
   }
   root.append(grid, h('p', { class: 'muted small' }, `Shaded days are marked “${store.data.settings.preferred_label}”. Dashed dinners are ideas, not plans yet.`));
 }
