@@ -113,7 +113,12 @@ export function showSignedOut(err) {
     return;
   }
   const who = code === 'not_allowed' && err.data && err.data.email ? ` You signed in as ${err.data.email}.` : '';
-  banner('signedout', `${text}${who} [${code}]`, { label: 'Sign in again', onClick: () => location.reload() });
+  // Signed in as the wrong person: end the Access session so the login page
+  // can ask again, instead of reloading into the same rejection.
+  const action = code === 'not_allowed'
+    ? { label: 'Use a different email', onClick: () => location.assign('/cdn-cgi/access/logout') }
+    : { label: 'Sign in again', onClick: () => location.reload() };
+  banner('signedout', `${text}${who} [${code}]`, action);
 }
 
 export async function get(path) {

@@ -216,6 +216,7 @@ test('a sign-in rejection names its reason instead of looping on "expired"', asy
   const bannerEl = page.locator('#banner');
   await bannerEl.getByText(/isn’t in the app’s allowed list.*You signed in as someone@example\.com\. \[not_allowed\]/).waitFor();
   assert.doesNotMatch(await bannerEl.innerText(), /expired/);
+  await bannerEl.getByRole('button', { name: 'Use a different email' }).waitFor();
   await page.unroute('**/api/state*');
 
   await page.route('**/api/state*', (route) =>
