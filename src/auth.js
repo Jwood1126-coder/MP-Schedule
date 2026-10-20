@@ -2,8 +2,10 @@
 // module also verifies the Access token on every API request (defense in
 // depth), and fails closed if anything is missing or misconfigured.
 //
+// Configuration:
+//   TEAM_DOMAIN     e.g. https://your-team.cloudflareaccess.com; public, so it is
+//                   a plain var in wrangler.jsonc (https:// is optional)
 // Worker secrets (set in the Cloudflare dashboard, never in the repo):
-//   TEAM_DOMAIN     e.g. https://your-team.cloudflareaccess.com
 //   POLICY_AUD      the Access application's "Application Audience (AUD) Tag"
 //   ALLOWED_EMAILS  comma-separated list of the two allowed emails
 

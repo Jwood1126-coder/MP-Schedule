@@ -22,7 +22,11 @@
       "database_id": "470f7bbb-b6b4-4e4f-8d45-d8b4c9268dcc"
     }
   ],
-  "observability": { "enabled": true }
-  // No "vars": TEAM_DOMAIN, POLICY_AUD and ALLOWED_EMAILS are Worker secrets
-  // set in the Cloudflare dashboard, so deploys never overwrite them.
+  "observability": { "enabled": true },
+  // TEAM_DOMAIN is the public sign-in address, so it lives here. POLICY_AUD and
+  // ALLOWED_EMAILS are Worker secrets set in the dashboard; deploys never
+  // overwrite secrets.
+  "vars": {
+    "TEAM_DOMAIN": "curly-moon-9b9a.cloudflareaccess.com"
+  }
 }

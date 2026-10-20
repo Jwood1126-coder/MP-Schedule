@@ -41,15 +41,16 @@ Until this is done, the app's data stays locked: the page loads, but every data 
 
 ### 3. Add the Worker secrets
 
-In **Workers & Pages → mp-schedule → Settings → Variables and Secrets**, add three entries, each of type **Secret**:
+In **Workers & Pages → mp-schedule → Settings → Variables and Secrets**, add two entries, each of type **Secret**:
 
 | Name | Value |
 |---|---|
-| `TEAM_DOMAIN` | your team domain, e.g. `https://your-team.cloudflareaccess.com` |
 | `POLICY_AUD` | the Application Audience (AUD) Tag |
 | `ALLOWED_EMAILS` | both emails, comma-separated: `you@example.com,partner@example.com` |
 
 The Worker checks Cloudflare's sign-in token on every request, plus the email against this list. These values live only in Cloudflare, never in GitHub, and deploys don't overwrite them.
+
+`TEAM_DOMAIN` (your public sign-in address, like `your-team.cloudflareaccess.com`) is not secret, so it's set in `wrangler.jsonc` under `vars`. If you change your Zero Trust team name, update it there. Don't add `POLICY_AUD` or `ALLOWED_EMAILS` to `vars`: the repository is meant to stay free of household details.
 
 ### 4. Add it to your iPhone home screen
 
