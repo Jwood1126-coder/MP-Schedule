@@ -27,6 +27,8 @@
   // ALLOWED_EMAILS are Worker secrets set in the dashboard; deploys never
   // overwrite secrets.
   "vars": {
-    "TEAM_DOMAIN": "curly-moon-9b9a.cloudflareaccess.com"
+    "TEAM_DOMAIN": "curly-moon-9b9a.cloudflareaccess.com",
+    // Notion "Meal plan inbox" database id (not secret). NOTION_TOKEN is a Worker secret.
+    "NOTION_INBOX_DB": "9fc2e5b1516f4212852510241783c0ad"
   }
 }

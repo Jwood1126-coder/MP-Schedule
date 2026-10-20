@@ -73,7 +73,7 @@ export async function handleApi(request, env) {
       if (!m) continue;
       const body = await readBody(request);
       const params = m.slice(1).map((p) => decodeURIComponent(p));
-      const result = await handler({ db: env.DB, user: user.email, me: user, body, params, url, schemaVersion: SCHEMA_VERSION });
+      const result = await handler({ db: env.DB, env, user: user.email, me: user, body, params, url, schemaVersion: SCHEMA_VERSION });
       return result instanceof Response ? result : json(200, result);
     }
     return json(404, { error: 'not_found' });

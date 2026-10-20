@@ -4,6 +4,7 @@ import { h, sheet, closeSheet, choose, stepper, toast } from '../ui.js';
 import { mutate } from '../api.js';
 import { store, recipesById, mealsOn, isPreferred, boughtForMeal } from '../store.js';
 import { addDays, weekDates, prettyDate, localToday, weekStart } from '../core/dates.js';
+import { proposalCard, loadInbox, inboxKey } from './proposal-card.js';
 
 const STATUS_LABEL = { tentative: 'Idea', planned: 'Planned', cooked: 'Cooked', skipped: 'Skipped' };
 
@@ -30,6 +31,24 @@ export function render(root, ctx) {
       h('span', { class: `progress ${active >= target ? 'done' : ''}`, 'data-testid': 'progress' }, `${active} of ${target} dinners planned`),
       h('button', { class: 'primary', onclick: () => suggest(ctx, start) }, 'Suggest dinners')),
   );
+
+  // Alfred's proposals come first: reviewing them is the main job here.
+  const inbox = store.inbox?.data;
+  const waiting = inbox?.proposals || [];
+  if (waiting.length) {
+    root.append(proposalCard(waiting[0], {
+      onDecided: (r) => {
+        if (r.week_of && (r.outcome === 'accept' || r.outcome === 'partial')) ctx.navigate(`#/plan?w=${weekStart(r.week_of)}`);
+        ctx.reload({ force: true });
+      },
+    }));
+    if (waiting.length > 1) root.append(h('p', { class: 'muted small' }, `${waiting.length - 1} more plan${waiting.length > 2 ? 's' : ''} from Alfred after this one.`));
+  }
+  const seen = inboxKey(inbox);
+  loadInbox().then((d) => {
+    const onPlan = (location.hash.replace(/^#\/?/, '').split(/[/?]/)[0] || 'plan') === 'plan';
+    if (inboxKey(d) !== seen && onPlan) ctx.rerender();
+  });
 
   if (!store.data.recipes.length) {
     root.append(h('div', { class: 'panel info' },

@@ -121,7 +121,25 @@ export const MIGRATIONS = [
       )`,
     ],
   },
+  {
+    // Which Alfred proposals were already decided, so accepting twice can't
+    // add the same dinners twice.
+    id: '0002_inbox',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS inbox_decisions (
+        proposal_id TEXT PRIMARY KEY,
+        source TEXT NOT NULL,
+        week_of TEXT,
+        outcome TEXT NOT NULL,
+        decided_at TEXT NOT NULL,
+        decided_by TEXT,
+        summary TEXT
+      )`,
+    ],
+  },
 ];
+
+export const MIGRATION_IDS = MIGRATIONS.map((m) => m.id);
 
 export const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1].id;
 

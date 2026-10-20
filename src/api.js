@@ -3,6 +3,8 @@
 import { ENTITIES, HttpError, decode, getRaw, insertRow, updateRow, deleteRow, upsertRow, undo, allCols } from './db.js';
 import { str, int, flag, date, oneOf, expectedVersion, url as urlField, stringList } from './validate.js';
 import { STARTER_RECIPES } from './starter-recipes.js';
+import { MIGRATION_IDS } from './schema.js';
+import { getInbox, previewInbox, decideInbox } from './inbox.js';
 import { DEFAULT_SETTINGS, SETTING_KEYS, TAGS, mergeSettings } from '../public/js/core/defaults.js';
 import { addDays, daysBetween, isDate } from '../public/js/core/dates.js';
 import { buildList, toSnapshotRows } from '../public/js/core/grocery.js';
@@ -433,7 +435,8 @@ async function importAll({ db, user, body, schemaVersion }) {
   if (body.confirm !== 'REPLACE') throw new HttpError(400, 'invalid', { message: 'send confirm: "REPLACE"' });
   const data = body.data;
   if (!data || typeof data !== 'object' || !data.tables || typeof data.tables !== 'object') throw new HttpError(400, 'invalid', { message: 'not a meal-planner export' });
-  if (data.schema_version && data.schema_version !== schemaVersion) throw new HttpError(400, 'invalid', { message: `export is schema ${data.schema_version}; this app is ${schemaVersion}` });
+  // Exports from any earlier schema import cleanly: later migrations only add tables.
+  if (data.schema_version && !MIGRATION_IDS.includes(data.schema_version)) throw new HttpError(400, 'invalid', { message: `export is schema ${data.schema_version}; this app is ${schemaVersion}` });
 
   const stmts = [];
   for (const name of DATA_ENTITIES) {
@@ -505,6 +508,9 @@ export const routes = [
   ['GET', /^\/api\/export$/, exportAll],
   ['POST', /^\/api\/import$/, importAll],
   ['POST', /^\/api\/seed-starter$/, seedStarter],
+  ['GET', /^\/api\/inbox$/, getInbox],
+  ['POST', /^\/api\/inbox\/preview$/, previewInbox],
+  ['POST', /^\/api\/inbox\/decide$/, decideInbox],
 ];
 
 export { DEFAULT_SETTINGS };

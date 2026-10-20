@@ -56,6 +56,18 @@ The Worker checks Cloudflare's sign-in token on every request, plus the email ag
 
 Open the app's `workers.dev` address in Safari, sign in, tap **Share → Add to Home Screen**. Do this on both phones.
 
+## Alfred's inbox
+
+Alfred does the planning; the app is where you and Jess review and accept. Alfred posts each week's proposal as a page in the Notion **Meal plan inbox** database (format: [docs/ALFRED_FORMAT.md](docs/ALFRED_FORMAT.md)). It appears at the top of **Plan**: keep (✓), swap to the alternate (↺) or skip (✕) each dinner, add a note, then **Accept plan** or **Send back**. Accepting adds the dinners, any new recipes, the busy days and extra grocery items in one step (and it shows up in History, so it can be undone). The app writes the result back to the Notion page so Alfred sees what you chose.
+
+### One-time setup
+
+1. Go to [notion.so/profile/integrations](https://www.notion.so/profile/integrations) → **New integration**. Type **Internal**, pick your workspace, name it e.g. `Meal planner`. Under capabilities, allow **Read content** and **Update content** (no user information needed). Save and copy the **Internal integration secret**.
+2. In Notion, open the **Meal plan inbox** database → **•••** (top right) → **Connections** → add `Meal planner`.
+3. In Cloudflare: **Workers & Pages → mp-schedule → Settings → Variables and Secrets** → add `NOTION_TOKEN` as type **Secret**, value = the integration secret. (The inbox database id is already in `wrangler.jsonc` as `NOTION_INBOX_DB`; it isn't secret.)
+
+**More → Alfred** shows whether the inbox is connected. Without it, you can still paste a plan Alfred wrote into **More → Paste a plan from Alfred**.
+
 ## Everyday tips
 
 - **Two phones at once.** If both of you change the same thing, the second save asks "keep theirs or use mine", so nothing is silently lost.

@@ -2,7 +2,8 @@
 import { h, choose, toast, dateTimeOf, personName } from '../ui.js';
 import { mutate, get } from '../api.js';
 import { store, recipesById } from '../store.js';
-import { prettyDate } from '../core/dates.js';
+import { prettyDate, weekStart } from '../core/dates.js';
+import { proposalCard, loadInbox } from './proposal-card.js';
 
 export function render(root, ctx) {
   if (ctx.route.parts[0] === 'history') return history(root, ctx);
@@ -29,6 +30,8 @@ export function render(root, ctx) {
     h('h1', {}, 'More'),
     h('p', { class: 'muted' }, `Signed in as ${me.email}${me.dev ? ' (local development)' : ''}`),
     h('div', { class: 'actions' }, h('button', { onclick: () => ctx.navigate('#/more/history') }, 'History and undo')),
+    h('h2', {}, 'Alfred'),
+    alfredSection(ctx),
     h('h2', {}, 'Settings'),
     field('Name for preferred days', label, () => save('preferred_label', label.value.trim()), 'Shown on each day, e.g. “Busy day”. Preferred, never required.'),
     field('Dinners per week', perWeek, () => save('dinners_per_week', Number(perWeek.value))),
@@ -46,6 +49,46 @@ export function render(root, ctx) {
     h('p', { class: 'muted small' }, 'Dinners never places orders or handles payment. Build your cart in the store’s own app.'),
   );
   return null;
+}
+
+// A pasted plan survives re-renders (every save re-renders the view).
+const paste = { text: '', preview: null };
+
+function alfredSection(ctx) {
+  const status = h('p', { class: 'muted small', 'data-testid': 'inbox-status' }, 'Alfred inbox: checking…');
+  loadInbox().then((d) => {
+    const n = d?.proposals?.length || 0;
+    status.textContent = !d ? 'Alfred inbox: couldn’t check right now.'
+      : !d.configured ? 'Alfred inbox: not connected (add the NOTION_TOKEN secret; see the README). Pasting a plan below still works.'
+        : d.error ? `Alfred inbox: connected, but Notion had a problem: ${d.error}`
+          : `Alfred inbox: connected · ${n} plan${n === 1 ? '' : 's'} waiting${n ? ' on the Plan tab' : ''}.`;
+  });
+  const ta = h('textarea', { rows: '6', placeholder: 'Paste the plan Alfred wrote (the JSON block)…', 'aria-label': 'Plan from Alfred', oninput: (e) => { paste.text = e.target.value; } }, paste.text);
+  const preview = async () => {
+    paste.text = ta.value;
+    let r;
+    try {
+      r = await mutate('POST', '/api/inbox/preview', { text: paste.text }, { label: 'plan preview' });
+    } catch {
+      return;
+    }
+    if (!r) return;
+    paste.preview = { text: paste.text, proposal: r.proposal };
+    ctx.rerender();
+  };
+  const card = paste.preview ? proposalCard(paste.preview.proposal, {
+    text: paste.preview.text,
+    onDecided: (res) => {
+      paste.text = '';
+      paste.preview = null;
+      if (res.week_of && (res.outcome === 'accept' || res.outcome === 'partial')) ctx.navigate(`#/plan?w=${weekStart(res.week_of)}`);
+      else ctx.rerender();
+    },
+  }) : null;
+  return h('div', { class: 'card' }, status,
+    h('label', {}, 'Paste a plan from Alfred'), ta,
+    h('div', { class: 'actions' }, h('button', { class: 'small-btn', onclick: preview }, 'Preview')),
+    card);
 }
 
 async function download() {

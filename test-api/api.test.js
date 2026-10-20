@@ -237,7 +237,7 @@ test('settings validation and versioning', async () => {
 test('export then import round-trips all data', async () => {
   const exp = await call('GET', '/api/export');
   assert.equal(exp.status, 200);
-  assert.equal(exp.data.schema_version, '0001_init');
+  assert.equal(exp.data.schema_version, '0002_inbox');
   const snapshotBefore = await state();
   // Change something, then restore from the export.
   await call('POST', '/api/meals', { date: '2026-10-22', recipe_id: recipes[1].id });

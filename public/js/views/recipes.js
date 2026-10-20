@@ -96,7 +96,8 @@ function cookView(root, ctx, recipe) {
     );
   };
   draw();
-  root.append(
+  // Native append() would print a null child as the text "null".
+  root.append(...[
     h('p', {}, h('a', { href: '#/recipes' }, '‹ Recipes')),
     h('h1', {}, recipe.name),
     h('p', { class: 'muted' }, meta(recipe) || 'No times recorded'),
@@ -115,7 +116,7 @@ function cookView(root, ctx, recipe) {
     h('div', { class: 'actions' },
       h('button', { onclick: () => ctx.navigate(`#/recipes/${recipe.id}/edit`) }, 'Edit'),
       h('button', { onclick: () => mutate('PUT', `/api/recipes/${recipe.id}`, { archived: !recipe.archived, expected_version: recipe.version }, { label: 'recipe' }) }, recipe.archived ? 'Unarchive' : 'Archive')),
-  );
+  ].filter((c) => c != null));
 }
 
 function editor(root, ctx, recipe) {

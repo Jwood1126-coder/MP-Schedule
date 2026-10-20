@@ -24,6 +24,13 @@ function append(el, children) {
   }
 }
 
+// replaceChildren() that skips null/false and flattens arrays, like h().
+export function fill(el, ...children) {
+  clear(el);
+  append(el, children);
+  return el;
+}
+
 export function clear(el) {
   while (el.firstChild) el.firstChild.remove();
   return el;

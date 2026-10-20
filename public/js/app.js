@@ -9,6 +9,7 @@ import * as month from './views/month.js';
 import * as groceries from './views/groceries.js';
 import * as recipes from './views/recipes.js';
 import * as more from './views/more.js';
+import { markInboxStale } from './views/proposal-card.js';
 
 const VIEWS = { plan, month, groceries, recipes, more };
 const view = document.getElementById('view');
@@ -106,7 +107,10 @@ window.addEventListener('hashchange', () => {
   reload({ force: true });
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') reload();
+  if (document.visibilityState === 'visible') {
+    markInboxStale(); // reopening the app checks for new plans from Alfred
+    reload();
+  }
 });
 window.addEventListener('focus', () => reload());
 setInterval(() => {
