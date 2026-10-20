@@ -63,6 +63,10 @@ test('wrong audience, issuer, expired, not-yet-valid and unknown email all fail'
   await rejects(authenticate(req(await sign(goodClaims({ exp: NOW / 1000 - 120 }))), ENV, { fetchImpl, now: NOW }), 401, 'expired');
   await rejects(authenticate(req(await sign(goodClaims({ nbf: NOW / 1000 + 600 }))), ENV, { fetchImpl, now: NOW }), 401, 'not_yet_valid');
   await rejects(authenticate(req(await sign(goodClaims({ email: 'stranger@example.com' }))), ENV, { fetchImpl, now: NOW }), 401, 'not_allowed');
+  await assert.rejects(authenticate(req(await sign(goodClaims({ email: 'Stranger@Example.com' }))), ENV, { fetchImpl, now: NOW }), (err) => {
+    assert.deepEqual(err.extra, { email: 'stranger@example.com' }, 'echoes only the caller’s own email');
+    return true;
+  });
 });
 
 test('bad signature, unknown key and garbage tokens fail', async () => {

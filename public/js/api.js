@@ -112,7 +112,8 @@ export function showSignedOut(err) {
     });
     return;
   }
-  banner('signedout', `${text} [${code}]`, { label: 'Sign in again', onClick: () => location.reload() });
+  const who = code === 'not_allowed' && err.data && err.data.email ? ` You signed in as ${err.data.email}.` : '';
+  banner('signedout', `${text}${who} [${code}]`, { label: 'Sign in again', onClick: () => location.reload() });
 }
 
 export async function get(path) {

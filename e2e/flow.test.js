@@ -210,11 +210,11 @@ test('month view and recipe cook view render', async () => {
 test('a sign-in rejection names its reason instead of looping on "expired"', async () => {
   const { page } = phoneA;
   await page.route('**/api/state*', (route) =>
-    route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'not_allowed' }) }),
+    route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'not_allowed', email: 'someone@example.com' }) }),
   );
   await page.goto(`${base}/#/plan`);
   const bannerEl = page.locator('#banner');
-  await bannerEl.getByText(/isn’t in the app’s allowed list.*\[not_allowed\]/).waitFor();
+  await bannerEl.getByText(/isn’t in the app’s allowed list.*You signed in as someone@example\.com\. \[not_allowed\]/).waitFor();
   assert.doesNotMatch(await bannerEl.innerText(), /expired/);
   await page.unroute('**/api/state*');
 

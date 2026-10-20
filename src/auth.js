@@ -58,7 +58,9 @@ export async function authenticate(request, env, { fetchImpl = fetch, now = Date
 
   const claims = await verifyJwt(token, { teamDomain, aud, fetchImpl, now });
   const email = String(claims.email || '').trim().toLowerCase();
-  if (!email || !allowed.includes(email)) throw new AuthError(401, 'not_allowed');
+  // Echo the caller's own verified email so they can see which address
+  // Access used; the allowed list itself is never revealed.
+  if (!email || !allowed.includes(email)) throw new AuthError(401, 'not_allowed', { email });
   return { email, dev: false };
 }
 
