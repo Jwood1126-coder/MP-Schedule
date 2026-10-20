@@ -32,7 +32,7 @@ From then on, every push to the main branch deploys automatically.
 
 Until this is done, the app's data stays locked: the page loads, but every data request is refused. It fails closed.
 
-1. Open the Worker: **Workers & Pages → meal-planner → Settings → Domains & Routes**.
+1. Open the Worker: **Workers & Pages → mp-schedule → Domains** (its own tab since May 2026; older docs say Settings → Domains & Routes).
 2. Next to the `workers.dev` address, choose **Enable Cloudflare Access** (check the labels in the dashboard; they may differ slightly).
 3. Cloudflare creates an Access application for that address. Edit its policy so it **allows exactly your two email addresses**, with the **One-time PIN** login method. Each of you then gets a code by email when signing in.
 4. Note two values from the Access application (check the labels in the dashboard; they may differ slightly):
@@ -41,7 +41,7 @@ Until this is done, the app's data stays locked: the page loads, but every data 
 
 ### 3. Add the Worker secrets
 
-In **Workers & Pages → meal-planner → Settings → Variables and Secrets**, add three entries, each of type **Secret**:
+In **Workers & Pages → mp-schedule → Settings → Variables and Secrets**, add three entries, each of type **Secret**:
 
 | Name | Value |
 |---|---|

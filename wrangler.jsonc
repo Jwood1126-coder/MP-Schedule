@@ -4,7 +4,7 @@
   // secret (using it still requires access to the Cloudflare account).
   // The Worker applies its own schema on the first API request (src/schema.js).
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "meal-planner",
+  "name": "mp-schedule",
   "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
   "workers_dev": true,
