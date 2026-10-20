@@ -59,7 +59,11 @@ export async function getInbox({ db, env }) {
   try {
     pages = await listProposals(env);
   } catch (err) {
-    if (err instanceof HttpError) return { configured: true, error: err.extra?.message || err.code, proposals: [] };
+    if (err instanceof HttpError) {
+      // Logged so setup problems are visible in Workers logs; the message never contains the token.
+      console.warn('inbox: notion error', err.code, err.extra?.notion_status ?? '', err.extra?.message ?? '');
+      return { configured: true, error: err.extra?.message || err.code, proposals: [] };
+    }
     throw err;
   }
   const decided = new Set(

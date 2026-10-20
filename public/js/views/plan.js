@@ -43,6 +43,9 @@ export function render(root, ctx) {
       },
     }));
     if (waiting.length > 1) root.append(h('p', { class: 'muted small' }, `${waiting.length - 1} more plan${waiting.length > 2 ? 's' : ''} from Alfred after this one.`));
+  } else if (inbox?.error) {
+    // A connected-but-failing inbox would otherwise look like "no plans".
+    root.append(h('p', { class: 'muted small', 'data-testid': 'inbox-error' }, `Alfred's inbox: ${inbox.error}`));
   }
   const seen = inboxKey(inbox);
   loadInbox().then((d) => {
