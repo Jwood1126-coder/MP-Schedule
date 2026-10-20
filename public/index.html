@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dinners</title>
+  <meta name="description" content="Plan dinners and the grocery list together.">
+  <meta name="theme-color" content="#2f6f4f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Dinners">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="/app.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <div id="banner" class="banner" role="status" aria-live="polite" hidden></div>
+  <main id="view" class="view" tabindex="-1"><p class="loading">Loading…</p></main>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#/plan" data-tab="plan"><span class="tab-icon" aria-hidden="true">🗓️</span>Plan</a>
+    <a href="#/month" data-tab="month"><span class="tab-icon" aria-hidden="true">📅</span>Month</a>
+    <a href="#/groceries" data-tab="groceries"><span class="tab-icon" aria-hidden="true">🛒</span>Groceries</a>
+    <a href="#/recipes" data-tab="recipes"><span class="tab-icon" aria-hidden="true">📖</span>Recipes</a>
+    <a href="#/more" data-tab="more"><span class="tab-icon" aria-hidden="true">⚙️</span>More</a>
+  </nav>
+  <div id="sheet-root"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

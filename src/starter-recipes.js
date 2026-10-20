@@ -1,0 +1,180 @@
+// A small starter library: generic, weeknight-realistic dinners written for
+// this app. Edit or archive any of them. Loaded only on request, and only
+// when the recipe library is empty.
+//
+// Ingredient format: [qty, unit, name, section, optional?]
+
+const R = (name, opts, ingredients, steps) => ({
+  name,
+  base_servings: 2,
+  ...opts,
+  ingredients: ingredients.map(([qty, unit, n, section, optional]) => ({ qty, unit, name: n, section, optional: !!optional, note: '' })),
+  steps: steps.join('\n'),
+  source_url: null,
+  rating: null,
+  archived: 0,
+});
+
+export const STARTER_RECIPES = [
+  R('Sheet-pan chicken and vegetables', {
+    active_min: 15, total_min: 40, pans: 1,
+    tags: ['workday-easy', 'healthy', 'leftover-friendly'],
+    prep_note: 'Thaw chicken in the fridge the night before if frozen.',
+  }, [
+    [1, 'lb', 'boneless chicken thighs', 'Meat & Seafood'],
+    [1, 'lb', 'baby potatoes', 'Produce'],
+    [2, '', 'bell pepper', 'Produce'],
+    [1, '', 'red onion', 'Produce'],
+    [2, 'tbsp', 'olive oil', 'Pantry'],
+    [1, 'tsp', 'paprika', 'Spices'],
+    [1, 'tsp', 'garlic powder', 'Spices'],
+    [null, '', 'salt', 'Spices'],
+    [1, '', 'lemon', 'Produce', true],
+  ], [
+    'Heat the oven to 425°F.',
+    'Halve the potatoes; cut peppers and onion into chunks.',
+    'Toss everything with oil, paprika, garlic powder and salt on one sheet pan.',
+    'Roast 30–35 minutes, stirring once, until the chicken is cooked through.',
+    'Squeeze lemon over the top if using.',
+  ]),
+  R('Turkey taco bowls', {
+    active_min: 20, total_min: 25, pans: 2,
+    tags: ['workday-easy', 'healthy'],
+    prep_note: '',
+  }, [
+    [1, 'lb', 'ground turkey', 'Meat & Seafood'],
+    [1, 'cup', 'brown rice', 'Pantry'],
+    [1, 'can (15 oz)', 'black beans', 'Canned & Jarred'],
+    [1, 'cup', 'salsa', 'Canned & Jarred'],
+    [1, '', 'avocado', 'Produce'],
+    [2, 'cup', 'romaine lettuce', 'Produce'],
+    [1, 'tbsp', 'chili powder', 'Spices'],
+    [1, 'tsp', 'cumin', 'Spices'],
+    [0.5, 'cup', 'shredded cheddar', 'Dairy & Eggs', true],
+    [1, '', 'lime', 'Produce', true],
+  ], [
+    'Cook the rice according to the package.',
+    'Brown the turkey in a skillet; stir in chili powder, cumin and a splash of water.',
+    'Warm the drained beans in the same pan.',
+    'Build bowls: rice, lettuce, turkey, beans, salsa, avocado, cheese and lime.',
+  ]),
+  R('Salmon rice bowls', {
+    active_min: 15, total_min: 30, pans: 2,
+    tags: ['workday-easy', 'healthy'],
+    prep_note: 'Thaw frozen salmon overnight in the fridge.',
+  }, [
+    [2, 'fillet', 'salmon', 'Meat & Seafood'],
+    [1, 'cup', 'brown rice', 'Pantry'],
+    [1, '', 'cucumber', 'Produce'],
+    [2, 'cup', 'shelled edamame', 'Frozen'],
+    [2, 'tbsp', 'soy sauce', 'Pantry'],
+    [1, 'tbsp', 'honey', 'Pantry'],
+    [1, 'tbsp', 'rice vinegar', 'Pantry'],
+    [1, '', 'avocado', 'Produce', true],
+  ], [
+    'Cook the rice.',
+    'Whisk soy sauce, honey and rice vinegar; brush half over the salmon.',
+    'Bake salmon at 400°F for 12–15 minutes.',
+    'Microwave edamame; slice cucumber.',
+    'Serve salmon over rice with vegetables; drizzle with remaining sauce.',
+  ]),
+  R('Turkey and bean chili', {
+    active_min: 20, total_min: 50, pans: 1,
+    tags: ['freezer-friendly', 'make-ahead', 'leftover-friendly', 'healthy'],
+    prep_note: 'Freezes well for up to 3 months. Good to double.',
+  }, [
+    [1, 'lb', 'ground turkey', 'Meat & Seafood'],
+    [1, '', 'yellow onion', 'Produce'],
+    [2, '', 'bell pepper', 'Produce'],
+    [3, 'clove', 'garlic', 'Produce'],
+    [1, 'can (15 oz)', 'black beans', 'Canned & Jarred'],
+    [1, 'can (15 oz)', 'kidney beans', 'Canned & Jarred'],
+    [1, 'can (28 oz)', 'crushed tomatoes', 'Canned & Jarred'],
+    [2, 'tbsp', 'chili powder', 'Spices'],
+    [2, 'tsp', 'cumin', 'Spices'],
+    [0.5, 'cup', 'shredded cheddar', 'Dairy & Eggs', true],
+  ], [
+    'Brown turkey with chopped onion and peppers in a large pot.',
+    'Add minced garlic and spices; cook 1 minute.',
+    'Add drained beans and tomatoes; simmer 25–30 minutes.',
+    'Serve with cheese if you like. Cool leftovers before freezing.',
+  ]),
+  R('Chicken and broccoli stir-fry', {
+    active_min: 25, total_min: 30, pans: 2,
+    tags: ['workday-easy', 'healthy'],
+    prep_note: '',
+  }, [
+    [1, 'lb', 'boneless chicken breast', 'Meat & Seafood'],
+    [1, 'head', 'broccoli', 'Produce'],
+    [1, '', 'bell pepper', 'Produce'],
+    [2, 'clove', 'garlic', 'Produce'],
+    [1, 'tbsp', 'fresh ginger', 'Produce'],
+    [3, 'tbsp', 'soy sauce', 'Pantry'],
+    [1, 'tbsp', 'cornstarch', 'Pantry'],
+    [1, 'tbsp', 'vegetable oil', 'Pantry'],
+    [1, 'cup', 'brown rice', 'Pantry'],
+  ], [
+    'Start the rice.',
+    'Slice chicken thin; toss with 1 tbsp soy sauce and the cornstarch.',
+    'Stir-fry chicken in hot oil until browned; remove.',
+    'Stir-fry broccoli and pepper 4–5 minutes; add garlic and ginger.',
+    'Return chicken with remaining soy sauce and a splash of water; toss until glossy.',
+  ]),
+  R('Sausage and greens pasta', {
+    active_min: 20, total_min: 25, pans: 2,
+    tags: ['workday-easy'],
+    prep_note: '',
+  }, [
+    [8, 'oz', 'whole wheat pasta', 'Pantry'],
+    [12, 'oz', 'chicken sausage', 'Meat & Seafood'],
+    [5, 'oz', 'baby spinach', 'Produce'],
+    [3, 'clove', 'garlic', 'Produce'],
+    [1, 'cup', 'cherry tomatoes', 'Produce'],
+    [0.25, 'cup', 'grated parmesan', 'Dairy & Eggs'],
+    [1, 'tbsp', 'olive oil', 'Pantry'],
+  ], [
+    'Boil the pasta; save a cup of pasta water.',
+    'Brown sliced sausage in oil; add garlic and halved tomatoes.',
+    'Stir in spinach until wilted.',
+    'Toss with pasta, parmesan and a splash of pasta water.',
+  ]),
+  R('Black bean quesadillas', {
+    active_min: 15, total_min: 20, pans: 1,
+    tags: ['workday-easy'],
+    prep_note: '',
+  }, [
+    [4, '', 'whole wheat tortillas', 'Bakery'],
+    [1, 'can (15 oz)', 'black beans', 'Canned & Jarred'],
+    [1, 'cup', 'shredded cheddar', 'Dairy & Eggs'],
+    [1, '', 'bell pepper', 'Produce'],
+    [0.5, 'cup', 'salsa', 'Canned & Jarred'],
+    [1, '', 'avocado', 'Produce', true],
+    [2, 'cup', 'romaine lettuce', 'Produce', true],
+  ], [
+    'Mash half the beans; mix with the rest and diced pepper.',
+    'Fill tortillas with beans and cheese; fold.',
+    'Cook in a dry skillet 2–3 minutes per side.',
+    'Serve with salsa, avocado and a simple salad.',
+  ]),
+  R('Lentil vegetable soup', {
+    active_min: 20, total_min: 45, pans: 1,
+    tags: ['freezer-friendly', 'make-ahead', 'leftover-friendly', 'healthy'],
+    prep_note: 'Freezes well. Good to double.',
+  }, [
+    [1, 'cup', 'dry brown lentils', 'Pantry'],
+    [1, '', 'yellow onion', 'Produce'],
+    [2, '', 'carrot', 'Produce'],
+    [2, 'stalk', 'celery', 'Produce'],
+    [3, 'clove', 'garlic', 'Produce'],
+    [1, 'can (15 oz)', 'diced tomatoes', 'Canned & Jarred'],
+    [4, 'cup', 'low-sodium vegetable broth', 'Canned & Jarred'],
+    [5, 'oz', 'baby spinach', 'Produce'],
+    [1, 'tsp', 'cumin', 'Spices'],
+    [1, 'tbsp', 'olive oil', 'Pantry'],
+  ], [
+    'Soften chopped onion, carrot and celery in oil, 6–8 minutes.',
+    'Add garlic and cumin; cook 1 minute.',
+    'Add rinsed lentils, tomatoes and broth; simmer 25–30 minutes.',
+    'Stir in spinach until wilted. Season to taste.',
+  ]),
+];

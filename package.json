@@ -1,0 +1,23 @@
+{
+  "name": "meal-planner",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Private two-person dinner planner and grocery list (Cloudflare Workers + D1).",
+  "type": "module",
+  "scripts": {
+    "dev": "node --no-warnings scripts/local-server.js",
+    "dev:wrangler": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "node scripts/check.js",
+    "test": "node --no-warnings --test \"test/*.test.js\"",
+    "test:api": "node --no-warnings --test --test-concurrency=1 \"test-api/*.test.js\"",
+    "test:e2e": "node --no-warnings --test --test-concurrency=1 \"e2e/*.test.js\"",
+    "test:all": "npm run check && npm test && npm run test:api && npm run test:e2e"
+  },
+  "devDependencies": {
+    "wrangler": "^4.45.0"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}
