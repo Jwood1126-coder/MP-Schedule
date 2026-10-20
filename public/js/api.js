@@ -37,7 +37,14 @@ export function pendingCount() {
 }
 
 class NetworkError extends Error {}
-export class SignedOut extends Error {}
+// code is the server's reason (see src/auth.js), or 'redirect' when Access
+// bounced the request to its login page.
+export class SignedOut extends Error {
+  constructor(code) {
+    super(code || 'signed_out');
+    this.code = code || 'signed_out';
+  }
+}
 
 // Low-level fetch. Access redirects an expired session to its login page;
 // with redirect: 'manual' that shows up as an opaque redirect.
@@ -55,7 +62,16 @@ async function send(method, path, body) {
   } catch {
     throw new NetworkError('network');
   }
-  if (res.type === 'opaqueredirect' || res.status === 401) throw new SignedOut();
+  if (res.type === 'opaqueredirect') throw new SignedOut('redirect');
+  if (res.status === 401) {
+    let code = '';
+    try {
+      code = (await res.json()).error || '';
+    } catch {
+      /* no body */
+    }
+    throw new SignedOut(code);
+  }
   let data = null;
   try {
     data = await res.json();
@@ -65,8 +81,21 @@ async function send(method, path, body) {
   return { status: res.status, data };
 }
 
-export function showSignedOut() {
-  banner('signedout', 'Your sign-in expired.', { label: 'Sign in again', onClick: () => location.reload() });
+// Only a real expiry is fixed by signing in again; the other reasons are setup
+// problems, so say which setting to check (reason code in brackets).
+const SIGNED_OUT_MESSAGES = {
+  redirect: 'Your sign-in expired.',
+  expired: 'Your sign-in expired.',
+  missing_token: 'Cloudflare Access isn’t protecting this address yet, so the app can’t tell who you are. Turn on Access for the Production URL.',
+  not_allowed: 'You’re signed in, but this email isn’t in the app’s allowed list. Check the ALLOWED_EMAILS secret.',
+  bad_audience: 'Sign-in settings don’t match: POLICY_AUD isn’t this Access application’s AUD tag.',
+  bad_issuer: 'Sign-in settings don’t match: TEAM_DOMAIN isn’t your Zero Trust team domain.',
+};
+
+export function showSignedOut(err) {
+  const code = (err && err.code) || 'signed_out';
+  const text = SIGNED_OUT_MESSAGES[code] || 'Sign-in didn’t work.';
+  banner('signedout', `${text} [${code}]`, { label: 'Sign in again', onClick: () => location.reload() });
 }
 
 export async function get(path) {
@@ -122,7 +151,7 @@ export async function mutate(method, path, body = {}, { label = 'change', quiet 
     r = await send(method, path, body);
   } catch (err) {
     if (err instanceof SignedOut) {
-      showSignedOut();
+      showSignedOut(err);
       return null;
     }
     enqueue(op);
@@ -181,7 +210,7 @@ export async function retryNow() {
         r = await send(op.method, op.path, op.body);
       } catch (err) {
         if (err instanceof SignedOut) {
-          showSignedOut();
+          showSignedOut(err);
           return;
         }
         showPendingBanner();

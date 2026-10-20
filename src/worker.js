@@ -51,7 +51,10 @@ export async function handleApi(request, env) {
     try {
       user = await authenticate(request, env);
     } catch (err) {
-      if (err instanceof AuthError) return json(err.status, { error: err.code });
+      if (err instanceof AuthError) {
+        console.warn('auth rejected:', err.code); // reason only, never the email
+        return json(err.status, { error: err.code });
+      }
       throw err;
     }
     if (MUTATING.has(request.method)) checkMutation(request, url);

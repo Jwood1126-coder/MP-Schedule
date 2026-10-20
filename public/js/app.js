@@ -70,7 +70,7 @@ export async function reload({ force = false } = {}) {
     await refresh();
   } catch (err) {
     if (err instanceof SignedOut) {
-      showSignedOut();
+      showSignedOut(err);
       return;
     }
     if (err.status === 503 && err.data && err.data.error === 'not_configured') {

@@ -207,6 +207,18 @@ test('month view and recipe cook view render', async () => {
   assert.match(await page.locator('.ing-list').innerText(), /1½ lb boneless chicken thighs/);
 });
 
+test('a sign-in rejection names its reason instead of looping on "expired"', async () => {
+  const { page } = phoneA;
+  await page.route('**/api/state*', (route) =>
+    route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'not_allowed' }) }),
+  );
+  await page.goto(`${base}/#/plan`);
+  const bannerEl = page.locator('#banner');
+  await bannerEl.getByText(/isn’t in the app’s allowed list.*\[not_allowed\]/).waitFor();
+  assert.doesNotMatch(await bannerEl.innerText(), /expired/);
+  await page.unroute('**/api/state*');
+});
+
 test('no console errors (including CSP violations)', () => {
   const real = consoleErrors.filter((e) => !/Failed to load resource|ERR_INTERNET_DISCONNECTED|net::ERR/.test(e));
   assert.deepEqual(real, []);
