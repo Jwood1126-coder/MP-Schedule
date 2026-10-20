@@ -1,7 +1,7 @@
 {
   // Cloudflare Worker for the meal planner.
-  // The D1 database has no database_id on purpose: the first `wrangler deploy`
-  // creates it (automatic resource provisioning) and keeps it linked.
+  // The D1 database was created ahead of time; its id is an identifier, not a
+  // secret (using it still requires access to the Cloudflare account).
   // The Worker applies its own schema on the first API request (src/schema.js).
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "meal-planner",
@@ -18,7 +18,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "meal-planner"
+      "database_name": "meal-planner",
+      "database_id": "470f7bbb-b6b4-4e4f-8d45-d8b4c9268dcc"
     }
   ],
   "observability": { "enabled": true }

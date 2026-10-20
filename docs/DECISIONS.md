@@ -30,7 +30,7 @@ Whole-household grocery shopping, including bulk trips such as Costco, is a poss
 
 - **Cloudflare, under the household's own account:**
   - one Worker serves the static app and a JSON API
-  - D1 (SQLite) holds the data, created automatically on first deploy
+  - D1 (SQLite) holds the data, created ahead of time and linked by id in `wrangler.jsonc`
   - Cloudflare Access handles sign-in, with an email one-time PIN for exactly two people
 - **Defense in depth:** the Worker verifies the Access token and checks the email against an allow-list, and fails closed if not configured. There are CSRF checks on writes, a strict Content Security Policy, and no `innerHTML` with data.
 - **Shared state** has versioned rows: a conflicting save is refused and the person chooses "keep theirs" or "use mine". A change log powers history and undo. The app refreshes on focus and every 30 seconds.

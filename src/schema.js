@@ -1,8 +1,7 @@
 // Database schema, applied by the Worker itself on the first API request.
 //
-// Why not `wrangler d1 migrations apply`? The D1 database is created
-// automatically on first deploy, and migrations-apply doesn't work for those
-// auto-provisioned bindings yet. So migrations live here and run from code.
+// Why not `wrangler d1 migrations apply`? Running migrations from code keeps
+// the deploy command to a single `npx wrangler deploy`, with no extra step.
 //
 // Rules for adding a migration: append to MIGRATIONS with a new id, and keep
 // every statement idempotent (IF NOT EXISTS, INSERT OR IGNORE). Two isolates

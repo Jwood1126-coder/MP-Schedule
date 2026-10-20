@@ -24,7 +24,7 @@ You do this once. Labels in the Cloudflare dashboard change from time to time, s
    - **Deploy command:** `npx wrangler deploy`
 3. Save and deploy.
 
-The **database is created automatically on the first deploy**. There's no D1 step in the dashboard, and the Worker sets up its own tables on the first request. If the dashboard later shows a database ID, you don't need to copy it anywhere: it never goes into this repository.
+The **database already exists** (`meal-planner` in D1) and is linked in `wrangler.jsonc`, so there's no D1 step in the dashboard. The Worker sets up its own tables on the first request.
 
 From then on, every push to the main branch deploys automatically.
 
@@ -91,6 +91,6 @@ npm run test:all
 
 `npm run dev` runs the real Worker code with Node's built-in SQLite standing in for D1. `npm run dev:wrangler` uses Cloudflare's own local runtime instead, after `npm install`.
 
-**Schema changes.** Migrations live in `src/schema.js`, and the Worker applies them itself on the first request. We don't use `wrangler d1 migrations` because it doesn't work for automatically created databases. Append a new entry, and keep every statement idempotent (`IF NOT EXISTS`, `INSERT OR IGNORE`).
+**Schema changes.** Migrations live in `src/schema.js`, and the Worker applies them itself on the first request. This keeps the deploy command to a single `npx wrangler deploy`. Append a new entry, and keep every statement idempotent (`IF NOT EXISTS`, `INSERT OR IGNORE`).
 
 **Privacy.** The repository contains only code and invented test data (`example.com` addresses). Never commit `.dev.vars`, backups, real emails or household details.
