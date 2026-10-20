@@ -55,6 +55,10 @@ const rejects = async (promise, status, code) => {
 
 test('wrong audience, issuer, expired, not-yet-valid and unknown email all fail', async () => {
   await rejects(authenticate(req(await sign(goodClaims({ aud: ['other'] }))), ENV, { fetchImpl, now: NOW }), 401, 'bad_audience');
+  await assert.rejects(authenticate(req(await sign(goodClaims({ aud: ['otherTag123'] }))), ENV, { fetchImpl, now: NOW }), (err) => {
+    assert.deepEqual(err.extra, { token_aud: ['otherTag123'] }, 'reports the AUD Cloudflare sent');
+    return true;
+  });
   await rejects(authenticate(req(await sign(goodClaims({ iss: 'https://evil.example.com' }))), ENV, { fetchImpl, now: NOW }), 401, 'bad_issuer');
   await rejects(authenticate(req(await sign(goodClaims({ exp: NOW / 1000 - 120 }))), ENV, { fetchImpl, now: NOW }), 401, 'expired');
   await rejects(authenticate(req(await sign(goodClaims({ nbf: NOW / 1000 + 600 }))), ENV, { fetchImpl, now: NOW }), 401, 'not_yet_valid');

@@ -10,10 +10,11 @@
 //   ALLOWED_EMAILS  comma-separated list of the two allowed emails
 
 export class AuthError extends Error {
-  constructor(status, code) {
+  constructor(status, code, extra = {}) {
     super(code);
     this.status = status;
     this.code = code;
+    this.extra = extra; // safe, non-secret details added to the JSON response
   }
 }
 
@@ -134,7 +135,13 @@ export async function verifyJwt(token, { teamDomain, aud, fetchImpl = fetch, now
   if (typeof claims.nbf === 'number' && claims.nbf - LEEWAY_S > nowS) throw new AuthError(401, 'not_yet_valid');
   if (claims.iss !== teamDomain) throw new AuthError(401, 'bad_issuer');
   const auds = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
-  if (!auds.includes(aud)) throw new AuthError(401, 'bad_audience');
+  if (!auds.includes(aud)) {
+    // The dashboard doesn't always show the AUD tag (e.g. Worker-scoped Access
+    // apps), so report what Cloudflare sent. Not secret, and only reached once
+    // the signature, expiry and issuer have checked out.
+    const tokenAud = auds.filter((a) => typeof a === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(a)).slice(0, 3);
+    throw new AuthError(401, 'bad_audience', { token_aud: tokenAud });
+  }
   return claims;
 }
 

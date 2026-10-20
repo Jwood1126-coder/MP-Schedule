@@ -53,7 +53,7 @@ export async function handleApi(request, env) {
     } catch (err) {
       if (err instanceof AuthError) {
         console.warn('auth rejected:', err.code); // reason only, never the email
-        return json(err.status, { error: err.code });
+        return json(err.status, { error: err.code, ...err.extra });
       }
       throw err;
     }

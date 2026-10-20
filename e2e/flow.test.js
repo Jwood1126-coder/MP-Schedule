@@ -217,6 +217,14 @@ test('a sign-in rejection names its reason instead of looping on "expired"', asy
   await bannerEl.getByText(/isn’t in the app’s allowed list.*\[not_allowed\]/).waitFor();
   assert.doesNotMatch(await bannerEl.innerText(), /expired/);
   await page.unroute('**/api/state*');
+
+  await page.route('**/api/state*', (route) =>
+    route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'bad_audience', token_aud: ['abc123TAG'] }) }),
+  );
+  await page.reload();
+  await bannerEl.getByText(/Cloudflare sent this AUD tag: abc123TAG \[bad_audience\]/).waitFor();
+  await bannerEl.getByRole('button', { name: 'Copy tag' }).waitFor();
+  await page.unroute('**/api/state*');
 });
 
 test('no console errors (including CSP violations)', () => {

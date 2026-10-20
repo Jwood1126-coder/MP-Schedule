@@ -40,9 +40,10 @@ class NetworkError extends Error {}
 // code is the server's reason (see src/auth.js), or 'redirect' when Access
 // bounced the request to its login page.
 export class SignedOut extends Error {
-  constructor(code) {
+  constructor(code, data = {}) {
     super(code || 'signed_out');
     this.code = code || 'signed_out';
+    this.data = data;
   }
 }
 
@@ -64,13 +65,13 @@ async function send(method, path, body) {
   }
   if (res.type === 'opaqueredirect') throw new SignedOut('redirect');
   if (res.status === 401) {
-    let code = '';
+    let data = {};
     try {
-      code = (await res.json()).error || '';
+      data = (await res.json()) || {};
     } catch {
       /* no body */
     }
-    throw new SignedOut(code);
+    throw new SignedOut(data.error || '', data);
   }
   let data = null;
   try {
@@ -95,6 +96,22 @@ const SIGNED_OUT_MESSAGES = {
 export function showSignedOut(err) {
   const code = (err && err.code) || 'signed_out';
   const text = SIGNED_OUT_MESSAGES[code] || 'Sign-in didn’t work.';
+  const tag = code === 'bad_audience' && Array.isArray(err.data && err.data.token_aud) ? err.data.token_aud[0] : '';
+  if (tag) {
+    // Let the owner copy the tag Cloudflare actually sent into POLICY_AUD.
+    banner('signedout', `${text} Cloudflare sent this AUD tag: ${tag} [${code}]`, {
+      label: 'Copy tag',
+      onClick: async () => {
+        try {
+          await navigator.clipboard.writeText(tag);
+          toast('AUD tag copied');
+        } catch {
+          toast('Couldn’t copy: press and hold the tag to select it');
+        }
+      },
+    });
+    return;
+  }
   banner('signedout', `${text} [${code}]`, { label: 'Sign in again', onClick: () => location.reload() });
 }
 
