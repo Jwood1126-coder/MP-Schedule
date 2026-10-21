@@ -153,7 +153,12 @@ export const MIGRATIONS = [
         'revision TEXT', 'title TEXT', 'writeback_status TEXT', 'writeback_attempts INTEGER NOT NULL DEFAULT 0',
         'writeback_error TEXT', 'notion_status TEXT', 'reply TEXT', 'decided_by_text TEXT', 'result TEXT',
       ];
+      // Check what exists first (D1 supports PRAGMA table_info); the catch below
+      // only covers two first requests racing each other.
+      const { results: info } = await db.prepare('PRAGMA table_info(inbox_decisions)').all();
+      const have = new Set((info || []).map((r) => r.name));
       for (const col of cols) {
+        if (have.has(col.split(' ')[0])) continue;
         try {
           await db.prepare(`ALTER TABLE inbox_decisions ADD COLUMN ${col}`).run();
         } catch (err) {
